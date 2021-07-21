@@ -18,51 +18,73 @@ class Ceres_Roles {
   
   
   
-  public function addCeresRole($role, $display_name) {
-    if (! $this->roleExists($role)) {
-      $this->setupRole($role);
+  public function addCeresRole($roleName, $display_name) {
+    if (! $this->roleExists($roleName)) {
+      $this->setupRole($roleName); // @TODO I'm liking the idea of this method less and less
       
       //make WP do its thing
-      add_role( $role, $display_name, $capabilities = array() );
+      add_role( $roleName, $display_name, $capabilities = array() );
       
     } else {
-      throw Exception("Role already exists");
+      throw Exception("Role $roleName already exists");
     }
   }
   
   
-  public function addCeresRoles() {
+  public function addAllCeresRoles() {
     foreach ($this->ceresRoles as $ceresRole => $displayName) {
       $this->addCeresRole($ceresRole);
     }
-        
-    
   }
 
   
-  public function removeCapabilityToRole($role, $capability) {
-    
+  public function removeCapabilityFromRole($role, $capability) {
+    if (is_string($role)) {
+      $roleObject = get_role($role);
+      if (! $roleObject) {
+        throw Exception("string $role does not exist");
+      }
+    } else {
+      $roleObject = $role;
+    }
   }
   
   public function addCapabilityToRole($role, $capability) {
-    
+    if (is_string($role)) {
+      $roleObject = get_role($role);
+      if (! $roleObject) {
+        throw Exception("string $role does not exist");
+      }
+    } else {
+      $roleObject = $role;
+    }
     
   }
   
   /**
    * Mostly a wrapper around WP's functionality
    * 
-   * @param string $role
+   * @param string|Object $role
    * @param string $user
    */
   
-  public function hasRole($role, $userSlug = null) {
+  public function hasRole($role, $userLogin = null) {
+    if (is_string($role)) {
+      $roleObject = get_role($role);
+      if (! $roleObject) {
+        throw Exception("string $role does not exist");
+      }
+    } else {
+      $roleObject = $role;
+    }
     //if user isn't supplied, use the current user
-    if (! $user) {
-      $user = wp_get_current_user();
+    if ( is_null($userLogin) ) {
+      $userObject = wp_get_current_user();
+      // @TODO: look up correct $user props
     }
     
     // make WP do it's thing
+    return wp_get_user_by('login', $userLogin); 
   }
   
   /**
@@ -72,28 +94,25 @@ class Ceres_Roles {
    * @param string|WP user object $user
    */
   
-  public function hasCapability($capability, $userSlug = null) {
+  public function hasCapability($capability, $userLogin = null) {
     //if user isn't supplied, use the current user
     if (! $user) {
       $userObject = wp_get_current_user();
     } else {
-      $userObject = wp_get_user_by('slug', $userSlug);
+      $userObject = wp_get_user_by('login', $userLogin);
     }
     
     return $userObject->has_cap($capability);
   }
   
   
-  private function roleExists($role) {
-    $roleObject = get_role( $role );
+  private function roleExists($roleName) {
+    $roleObject = get_role( $roleName );
     if (! $roleObject ) {
       return false;
     }
     return true;
   }
   
-  private function setupRole($role) {
-    
-  }
-  
 }
+
