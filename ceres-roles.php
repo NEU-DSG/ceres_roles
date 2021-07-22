@@ -28,6 +28,8 @@ class Ceres_Roles {
     } else {
       throw Exception("Role $roleName already exists");
     }
+    
+
   }
   
   
@@ -94,6 +96,8 @@ class Ceres_Roles {
    * @param string|WP user object $user
    */
   
+  // @TODO: too much duplication/wrapping around native wp functions?
+  // depends on where I want to call it, and how. a private method?
   public function hasCapability($capability, $userLogin = null) {
     //if user isn't supplied, use the current user
     if (! $user) {
@@ -114,5 +118,21 @@ class Ceres_Roles {
     return true;
   }
   
+  private function copyCapabilities($parentRoleName, $childRoleName) {
+    // get the parent's capabilities as array
+    $parentRoleObject = get_role($parentRoleName);
+    if (is_null($parentRoleObject)) {
+      throw new Exception("No role named $parentRoleName");
+    }
+    
+    $childRoleObject = get_role($childRoleName);
+    if (is_null($childRoleObject)) {
+      throw new Exception("No role named $childRoleName");
+    }
+    
+    foreach ($parentRoleObject->capabilities as $capability) {
+      $childRoleObject->add_cap($capability);
+    }
+  }
 }
 
