@@ -18,11 +18,9 @@ class Ceres_Roles {
   ];
   
   public $ceresRolesCapabilities = [
-      'ceres_student'    => [],
-      'ceres_ta'         => [],
-      'ceres_teacher'    => [],
-      'ceres_site_owner' => [],
-  
+      'ceres_student'    => [], // same as WP Author -- should I delete WP Author for clarity?
+      'ceres_ta'         => [], // inherits from Administrator, then has stuff removed below
+      'ceres_site_owner' => [], // inherits from Administrator, then has stuff removed below
   ];
   
   // @TODO nail down whether these can change other peoples' roles?
