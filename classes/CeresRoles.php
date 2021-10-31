@@ -10,17 +10,41 @@ class Ceres_Roles {
                      'subscriber'    => 'Subscriber',
   ];
   
-  public $ceresRoles = ['ceres_student'    => 'Student',
-                        'ceres_ta'         => 'Teaching Assistant',
-                        'ceres_teacher'    => 'Teacher',
-                        'ceres_site_owner' => 'Site Owner',
+  // See matrix at https://drive.google.com/file/d/1yQ0NRfeWfOTf8TWH3rbkEn9fEzhfDoxG/view 
+  public $ceresRoles = ['ceres_student'    => 'Student', // equals author
+                        'ceres_ta'         => 'Teaching Assistant', // inherits from administrator, then gets some removed
+                        'ceres_site_owner' => 'Site Owner', // inherits from administrator, then gets some removed
+                        'ceres_designer'   => 'Site Designer',
   ];
+  
+  public $ceresRolesCapabilities = [
+      'ceres_student'    => [],
+      'ceres_ta'         => [],
+      'ceres_teacher'    => [],
+      'ceres_site_owner' => [],
+  
+  ];
+  
+  // @TODO nail down whether these can change other peoples' roles?
+  public $ceresCapabilitiesToRemove = [
+      'ceres_site_owner'  => [], //site owner can't mess with plugins or themes
+      'ceres_ta'          => [], //TA can't mess with pluging or theme
+    
+  ];
+  
+  
   
   public function install() {
     // changes only happen once, upon installation, so check if it's already
     // installed, maybe also check if anything has gone haywire
     
+    foreach ($this->ceresRoles as $ceresRole => $ceresRoleDisplayNamae) {
+      $this->addCeresRole($ceresRole, $ceresRoleDisplayName);
+    }
     
+    foreach ($this->ceresRoles as $ceresRole => $ceresCapabilitiesToRemove) {
+      
+    }
   }
   
   public function uninstall() {
@@ -40,7 +64,7 @@ class Ceres_Roles {
     // this should figure out how to restore 'native' capabilities and roles
   }
   
-  public function addCeresRole($roleName, $display_name) {
+  public function addCeresRole($roleName, $display_name, $capabilities) {
     if (! $this->roleExists($roleName)) {
       $this->setupRole($roleName); // @TODO I'm liking the idea of this method less and less
       
@@ -54,23 +78,18 @@ class Ceres_Roles {
 
   }
   
-  
-  public function addAllCeresRoles() {
-    foreach ($this->ceresRoles as $ceresRole => $displayName) {
-      $this->addCeresRole($ceresRole);
-    }
-  }
-
-  
+  // No soup for you!
   public function removeCapabilityFromRole($role, $capability) {
     if (is_string($role)) {
       $roleObject = get_role($role);
       if (! $roleObject) {
-        throw new Exception("string $role does not exist");
+        throw new Exception("(string) $role does not exist");
       }
     } else {
       $roleObject = $role;
     }
+    
+    $roleObject->remove_cap($capability);
   }
   
   public function addCapabilityToRole($role, $capability) {
@@ -94,6 +113,7 @@ class Ceres_Roles {
   
   public function hasRole($role, $userLogin = null) {
     if (is_string($role)) {
+      // this could probably be more efficient
       $roleObject = get_role($role);
       if (! $roleObject) {
         throw new Exception("string $role does not exist");
@@ -101,14 +121,17 @@ class Ceres_Roles {
     } else {
       $roleObject = $role;
     }
-    //if user isn't supplied, use the current user
+    // if user isn't supplied, use the current user
     if ( is_null($userLogin) ) {
       $userObject = wp_get_current_user();
-      // @TODO: look up correct $user props
     }
     
-    // make WP do it's thing
-    return wp_get_user_by('login', $userLogin); 
+    $userObject = wp_get_user_by('login', $userLogin);
+    $roles = $userObject->roles;
+    if (in_array($role, $roles)) {
+      return true;
+    }
+    return false;
   }
   
   /**
@@ -121,7 +144,7 @@ class Ceres_Roles {
   // @TODO: too much duplication/wrapping around native wp functions?
   // depends on where I want to call it, and how. a private method?
   public function hasCapability($capability, $userLogin = null) {
-    //if user isn't supplied, use the current user
+    //if user isn't supplied, use the current user.
     if (! $user) {
       $userObject = wp_get_current_user();
     } else {

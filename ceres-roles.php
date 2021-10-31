@@ -17,3 +17,6 @@ register_deactivation_hook( __FILE__, array('CeresRoles', 'deactivate') );
 
 
 
+add_action('init', 'CeresRoles->imstall()');
+
+
