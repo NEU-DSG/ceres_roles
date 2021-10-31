@@ -18,15 +18,18 @@ class Ceres_Roles {
   ];
   
   public $ceresRolesCapabilities = [
-      'ceres_student'    => [], // same as WP Author -- should I delete WP Author for clarity?
+      'ceres_student'    => [], // have to figure out if I can separate writing and nav/categories
       'ceres_ta'         => [], // inherits from Administrator, then has stuff removed below
       'ceres_site_owner' => [], // inherits from Administrator, then has stuff removed below
+      'ceres_designer'   => [], // as ceres_student/author, but can hit navigation or categories
   ];
   
   // @TODO nail down whether these can change other peoples' roles?
   public $ceresCapabilitiesToRemove = [
       'ceres_site_owner'  => [], //site owner can't mess with plugins or themes
       'ceres_ta'          => [], //TA can't mess with pluging or theme
+      'ceres_student'     => [], // have to figure out if I can separate writing and nav/categories
+      'ceres_designer'    => [], // as ceres_student/author, but can hit navigation or categories
     
   ];
   
