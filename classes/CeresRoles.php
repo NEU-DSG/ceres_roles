@@ -1,7 +1,7 @@
 <?php 
 
 
-class Ceres_Roles {
+class CeresRoles {
   
   public $wpRoles = ['administrator' => 'Administrator',
                      'editor'        => 'Editor',
@@ -11,40 +11,54 @@ class Ceres_Roles {
   ];
   
   // See matrix at https://drive.google.com/file/d/1yQ0NRfeWfOTf8TWH3rbkEn9fEzhfDoxG/view 
-  public $ceresRoles = ['ceres_student'    => 'Student', // equals author
-                        'ceres_ta'         => 'Teaching Assistant', // inherits from administrator, then gets some removed
-                        'ceres_site_owner' => 'Site Owner', // inherits from administrator, then gets some removed
-                        'ceres_designer'   => 'Site Designer',
+  public $ceresRoles = ['ceres_student'      => 'CERES Student', // equals author
+                        'ceres_site_manager' => 'CERES Site Manager', // inherits from administrator, then gets some removed
+                        'ceres_site_owner'   => 'CERES Site Owner', // inherits from administrator, then gets some removed
+                        'ceres_designer'     => 'CERES Site Designer',
   ];
   
   public $ceresRolesCapabilities = [
-      'ceres_student'    => [], // have to figure out if I can separate writing and nav/categories
-      'ceres_ta'         => [], // inherits from Administrator, then has stuff removed below
-      'ceres_site_owner' => [], // inherits from Administrator, then has stuff removed below
-      'ceres_designer'   => [], // as ceres_student/author, but can hit navigation or categories
+      'ceres_student'      => [], // have to figure out if I can separate writing and nav/categories
+      'ceres_site_manager' => [], // inherits from Administrator, then has stuff removed below
+      'ceres_site_owner'   => [], // inherits from Administrator, then has stuff removed below
+      'ceres_designer'     => [], // as ceres_student/author, but can hit navigation or categories
   ];
   
   // @TODO nail down whether these can change other peoples' roles?
   public $ceresCapabilitiesToRemove = [
-      'ceres_site_owner'  => [], //site owner can't mess with plugins or themes
-      'ceres_ta'          => [], //TA can't mess with pluging or theme
-      'ceres_student'     => [], // have to figure out if I can separate writing and nav/categories
-      'ceres_designer'    => [], // as ceres_student/author, but can hit navigation or categories
+      'ceres_site_owner'   => [], //site owner can't mess with plugins or themes
+      'ceres_site_manager' => [], //site manager can't mess with pluging or theme
+      'ceres_student'      => [], // have to figure out if I can separate writing and nav/categories
+      'ceres_designer'     => [], // as ceres_student/author, but can hit navigation or categories
     
   ];
   
   
   
   public function install() {
+    
     // changes only happen once, upon installation, so check if it's already
     // installed, maybe also check if anything has gone haywire
+    $this->ceresRolesCapabilities['ceres_site_owner'] = get_role( 'administrator' )->capabilities;
+    $this->ceresRolesCapabilities['ceres_site_manager'] = $this->ceresRolesCapabilities['ceres_site_owner'];
+    $this->ceresRolesCapabilities['ceres_student'] = [];
+    $this->ceresRolesCapabilities['ceres_designer'] = [];
     
-    foreach ($this->ceresRoles as $ceresRole => $ceresRoleDisplayNamae) {
-      $this->addCeresRole($ceresRole, $ceresRoleDisplayName);
+    foreach ($this->ceresRoles as $ceresRole => $ceresRoleDisplayName) {
+      
+      print_r($ceresRole);
+      
+      $this->addCeresRole($ceresRole, $ceresRoleDisplayName, $this->ceresRolesCapabilities[$ceresRole]);
     }
     
-    foreach ($this->ceresRoles as $ceresRole => $ceresCapabilitiesToRemove) {
-      
+    // set the inheritance of capabilities for ceresRoles
+    // Site Owner from Administrator
+    // Site Manager from Administrator
+    // Designer from Author
+    // Student from Author (if we keep it -- note as of Oct 31 2021. Spooky!)
+    
+    foreach ($this->ceresRoles as $ceresRole => $ceresCapabilityToRemove) {
+      $this->removeCapabilityFromRole($ceresRole, $ceresCapabilityToRemove);
     }
   }
   
@@ -67,7 +81,6 @@ class Ceres_Roles {
   
   public function addCeresRole($roleName, $display_name, $capabilities) {
     if (! $this->roleExists($roleName)) {
-      $this->setupRole($roleName); // @TODO I'm liking the idea of this method less and less
       
       //make WP do its thing
       add_role( $roleName, $display_name, $capabilities = array() );
