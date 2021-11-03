@@ -17,6 +17,8 @@ class CeresRoles {
                         'ceres_designer'     => 'CERES Site Designer',
   ];
   
+  // Annoyingly looks like I have to set these via WP, and PHP doesn't seem to like
+  // that here. See the install method
   public $ceresRolesCapabilities = [
       'ceres_student'      => [], // have to figure out if I can separate writing and nav/categories
       'ceres_site_manager' => [], // inherits from Administrator, then has stuff removed below
@@ -26,11 +28,31 @@ class CeresRoles {
   
   // @TODO nail down whether these can change other peoples' roles?
   public $ceresCapabilitiesToRemove = [
-      'ceres_site_owner'   => [], //site owner can't mess with plugins or themes
-      'ceres_site_manager' => [], //site manager can't mess with pluging or theme
-      'ceres_student'      => [], // have to figure out if I can separate writing and nav/categories
-      'ceres_designer'     => [], // as ceres_student/author, but can hit navigation or categories
-    
+      //site owner can't mess with plugins or themes
+      'ceres_site_owner'   => [
+          'activate_plugins',
+          'switch_themes',
+      ], 
+      
+      //site manager can't mess with plugins or theme
+      'ceres_site_manager' => [
+          'activate_plugins',
+          'switch_themes',
+      ],
+      
+      // inherit from author
+      'ceres_student'      => [
+          'edit_others_pages',
+          'edit_others_posts',
+          'manage_categories',
+          'manage_links',
+          'moderate_comments',   
+          
+      ],
+      
+      // as ceres_student/author, but can hit navigation or categories
+      'ceres_designer'     => [
+      ], 
   ];
   
   
@@ -41,13 +63,10 @@ class CeresRoles {
     // installed, maybe also check if anything has gone haywire
     $this->ceresRolesCapabilities['ceres_site_owner'] = get_role( 'administrator' )->capabilities;
     $this->ceresRolesCapabilities['ceres_site_manager'] = $this->ceresRolesCapabilities['ceres_site_owner'];
-    $this->ceresRolesCapabilities['ceres_student'] = [];
-    $this->ceresRolesCapabilities['ceres_designer'] = [];
+    $this->ceresRolesCapabilities['ceres_student'] =  get_role( 'author' )->capabilities;
+    $this->ceresRolesCapabilities['ceres_designer'] =  get_role( 'author' )->capabilities;;
     
     foreach ($this->ceresRoles as $ceresRole => $ceresRoleDisplayName) {
-      
-      print_r($ceresRole);
-      
       $this->addCeresRole($ceresRole, $ceresRoleDisplayName, $this->ceresRolesCapabilities[$ceresRole]);
     }
     
@@ -63,16 +82,13 @@ class CeresRoles {
   }
   
   public function uninstall() {
-    // need to restore all role/capability functionality
-    // means I need to remember somewhere the original settings for anything I modify
-    
+   // just need to remove the roles, since current plan is only to inherit
+   // then modifying
   }
   
   public function activate() {
     // maybe this actually uses the install code?
     // have to research what install, uninstall, activate, and deactivate do
-    
-    
   }
   
   public function deactivate() {
@@ -115,7 +131,6 @@ class CeresRoles {
     } else {
       $roleObject = $role;
     }
-    
   }
   
   /**
