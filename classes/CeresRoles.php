@@ -86,11 +86,6 @@ class CeresRoles {
    // then modifying
   }
   
-  public function activate() {
-    // maybe this actually uses the install code?
-    // have to research what install, uninstall, activate, and deactivate do
-  }
-  
   public function deactivate() {
     // this should figure out how to restore 'native' capabilities and roles
   }
